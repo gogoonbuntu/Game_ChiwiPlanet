@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<!--
+	NOTES:
+	1. All tokens are represented by '$' sign in the template.
+	2. You can write your code only wherever mentioned.
+	3. All occurrences of existing tokens will be replaced by their appropriate values.
+	4. Blank lines will be removed automatically.
+	5. Remove unnecessary comments before creating your template.
+-->
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="authoring-tool" content="Adobe_Animate_CC">
+<title>html5 chiwi</title>
+<!-- write your code here -->
+<script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+<script src="html5 chiwi.js?1564837808441"></script>
+<script type='text/javascript' src='https://code.jquery.com/jquery-3.2.1.min.js'></script>
+<script>
+// Global Scripts
+	loadData();
+var keyCode = "";
+var movement = "";
+var cha;
+var minrange = 0; //공격 범위
+var maxrange = 0;
+var mon = []; //몬스터 어레이
+var i;
+var fulldata;
+var loadingDone = 0;
+var cameraObj;
+var cdx=0;
+var cdy=0;
+chavals = {
+	no: null,
+	lv: null,
+	pow: null,
+	def: null,
+	mpw: null,
+	mdf: null,
+	spd: null,
+	hp: null,
+	mp: null,
+	hpr: null,
+	mpr: null,
+	skp: null,
+	sk1phy: null,
+	sk1mag: null,
+	sk2phy: null,
+	sk2mag: null,
+	sk3phy: null,
+	sk3mag: null,
+	skin: 0
+}
+movement = {
+	moveleft: 0,
+	moveright: 0,
+	moveup: 0,
+	movedown: 0,
+	moving: 0,
+	move: null
+}
+function Init(name) {
+	chaSelect(name);
+	fullscreen();
+	window.addEventListener("keydown", KeyInput);
+	window.addEventListener("keyup", KeyUp);
+	for (var i = 0; i < exportRoot.children.length; i++) {
+		exportRoot.children[i].isActive = false;
+	}
+	cha.isActive = true;
+	cha.visible = true;
+	console.log("inited!!!");
+}
+function loadData() {
+	$.ajax({
+		url: "http://buntu.dothome.co.kr/chiwidata.txt",
+		dataType: 'jsonp',
+		jsonpCallback: "myCallback",
+		success: function (data) {
+			fulldata = data;
+			console.log('성공 - ', data);
+			loadingDone = 1;
+		},
+		error: function (xhr) {
+			console.log('실패 - ', xhr);
+		}
+	});
+}
+// 캐릭터 스탯 AJAX 로 읽기
+function chaSelect(name) {
+	var chiwidata;
+	chiwidata = fulldata[name].split(" ");
+	chavals.no = eval(chiwidata[0]);
+	chavals.lv = eval(chiwidata[1]);
+	chavals.pow = eval(chiwidata[2]);
+	chavals.def = eval(chiwidata[3]);
+	chavals.mpw = eval(chiwidata[4]);
+	chavals.mdf = eval(chiwidata[5]);
+	chavals.spd = 5 + eval(chiwidata[6]) / 3;
+	chavals.hp = eval(chiwidata[7]);
+	chavals.mp = eval(chiwidata[8]);
+	chavals.hpr = eval(chiwidata[9]);
+	chavals.mpr = eval(chiwidata[10]);
+	chavals.sk1phy = eval(chiwidata[11]);
+	chavals.sk1mag = eval(chiwidata[12]);
+	chavals.sk2phy = eval(chiwidata[13]);
+	chavals.sk2mag = eval(chiwidata[14]);
+	chavals.sk3phy = eval(chiwidata[15]);
+	chavals.sk3mag = eval(chiwidata[16]);
+	chavals.skp = chiwidata[17];
+	eval(eval(chiwidata[17])); //패시브 발동;
+	console.log("chavals:" + chavals);
+	cha.gotoAndStop(chavals.no);
+}
+function KeyInput(e) {
+	if (e.key == "ArrowLeft") {
+		cdx = 1;
+	}
+	if (e.key == "ArrowRight") {
+		cdx = -1;
+	}
+	if (e.key == "ArrowUp") {
+		cdy = -1;
+	}
+	if (e.key == "ArrowDown") {
+		cdy = 1;
+	}
+	if (e.key.toLowerCase() == "a") {
+		cdx=0,cdy=0;
+		switchMove("attack");
+	}
+	if (e.key.toLowerCase() == "s") {
+		cdx=0,cdy=0;
+		switchMove("skill1");
+	}
+	if (e.key.toLowerCase() == "d") {
+		cdx=0,cdy=0;
+		switchMove("skill2");
+	}
+	if (e.key.toLowerCase() == "f") {
+		cdx=0,cdy=0;
+		switchMove("skill3");
+	}
+	if (e.key.toLowerCase() == "p") {
+		objThis.play();
+	}
+}
+function KeyUp(e) {
+	if (e.key == "ArrowLeft") {
+		cdx = 0;
+		return 0;
+	}
+	if (e.key == "ArrowRight") {
+		cdx = 0;
+		return 0;
+	}
+	if (e.key == "ArrowUp") {
+		cdy = 0;
+		return 0;
+	}
+	if (e.key == "ArrowDown") {
+		cdy = 0;
+		return 0;
+	}
+}
+function switchMove(move) {
+	var actionFrame = 0;
+	movement.move = move;
+	switch (move) {
+		case "stay":
+			actionFrame = 0;
+			console.log("cha(" + cha.x + ", " + cha.y + ", " + cha.scaleX + ")");
+			break;
+		case "move":
+			actionFrame = 1;
+			break;
+		case "attack":
+			actionFrame = 2;
+			break;
+		case "skill1":
+			actionFrame = 3;
+			break;
+		case "skill2":
+			actionFrame = 4;
+			break;
+		case "skill3":
+			actionFrame = 5;
+			break;
+	}
+	cha.children[1].gotoAndStop(actionFrame);
+}
+function fullscreen() {
+	var el = document.getElementById('canvas');
+	if (el.webkitRequestFullScreen) {
+		el.webkitRequestFullScreen();
+	} else {
+		el.mozRequestFullScreen();
+	}
+}
+function summon(monster) {
+	var newmon = new monster;
+	newmon.x = Math.random() * 1600;
+	newmon.y = Math.random() * 600 + 300;
+	newmon.scaleX = 1 + (newmon.y - 500) / 1000
+	newmon.scaleY = Math.abs(newmon.scaleX);
+	newmon.hittable = true;
+	newmon.spd = 1;
+	newmon.def = 1;
+	newmon.mdf = 1;
+	newmon.hp = 100;
+	newmon.ahp = 100;
+	newmon.dx=0,newmon.dy=0;
+	newmon.hpbarShowTime = 0;
+	newmon.angry=0;
+	newmon.isActive = true;
+	mon.push(newmon);
+	monfunc(newmon, 3);
+	exportRoot.addChild(newmon);
+}
+function monfunc(objMon, movecount) {
+	var count = 0;
+	var rannum = 0;
+	var positionnumberX = Math.random();
+	var positionnumberY = Math.random();
+	objMon.action = setInterval(function () {
+		if (objMon.angry == 0) {
+			if (count < 10) {
+				if (objMon.x > cha.x) {
+					objMon.scaleX < 0 ? objMon.scaleX *= -1 : null;
+				} else {
+					objMon.scaleX < 0 ? null : objMon.scaleX *= -1;
+				}
+				objMon.gotoAndStop(rannum);
+				switch (rannum) {
+					case 0:
+						{
+							objMon.dx=0;
+							objMon.dy=0;
+							break;
+						}
+					case 1: //move left
+						{
+							positionnumberX > 0.67 ? objMon.dx=1 : positionnumberX > 0.33 ? objMon.dx=-1 : objMon.dx=0;
+							positionnumberY > 0.67 ? objMon.dy=1 : positionnumberY > 0.33 ? objMon.dy=-1 : objMon.dy=0;
+							break;
+						}
+					case 2:
+						{
+							objMon.dx=0;
+							objMon.dy=0;
+							break;
+						}
+				}
+				count++;
+			}else{
+				rannum = Math.round(Math.random() * 10) % movecount;
+				positionnumberX = Math.random();
+				positionnumberY = Math.random();
+				count=0;
+			}
+		} else {
+			objMon.gotoAndStop(1);
+			//if 닿았을떈 공격
+			cha.x<objMon.x ? objMon.dx=-1 : objMon.dx=1;
+			cha.y<objMon.y ? objMon.dy=-1 : objMon.dy=1;
+		}
+	}, 200);
+}
+function battle(minrange, range, physical, magical, dmgObj, splashcount) {
+	minrange *= cha.scaleY;
+	range *= cha.scaleY;
+	for (i = 0; i < mon.length; i++) {
+		var monHeight = mon[i].__proto__.nominalBounds.height * 1.2;
+		var monx = mon[i].x;
+		var mony = mon[i].y;
+		if (mon[i].hittable == true && mony < cha.y + 20 && mony > cha.y - 20) {
+			if (
+				(cha.scaleX > 0 && monx > cha.x - minrange - range && monx < cha.x - minrange) || (cha.scaleX < 0 && monx > cha.x + minrange && monx < cha.x + minrange + range)
+			) {
+				mon[i].angry=1;
+				var mdamage = magical - mon[i].mdf + Math.round(Math.random() * magical);
+				var pdamage = physical - mon[i].def + Math.round(Math.random() * physical);
+				pdamage < 0 ? pdamage = 0 : showDamage(dmgObj, pdamage, true, monx, mony - monHeight);
+				mdamage < 0 ? mdamage = 0 : showDamage(dmgObj, mdamage, false, monx, mony - monHeight);
+				var damage = pdamage + mdamage;
+				damageEffect(dmgObj, damage, monx, mony - monHeight);
+				damageEffect(dmgObj, damage, monx, mony - monHeight);
+				damageEffect(dmgObj, damage, monx, mony - monHeight);
+				hitted(mon[i]);
+				hpSubstract(mon[i], damage);
+				cameraShake(damage);
+				splashcount--;
+				if (splashcount < 0) break;
+			}
+		}
+	}
+}
+function showDamage(damage, number, isphy, xx, yy) {
+	var dmgtxt = new damage;
+	dmgtxt.x = xx;
+	dmgtxt.y = yy;
+	var a = dmgtxt.damageText;
+	a.text = number;
+	isphy ? a.color = "rgb(255, 0, 0)" : a.color = "rgb(0, 0, 255)";
+	var fontsize = 25 + number * 1.5;
+	fontsize > 100 ? fontsize = 100 : "";
+	a.font = "bold " + fontsize + "px 'Malgun Gothic'"
+	exportRoot.addChild(dmgtxt);
+	var dy = Math.random() * 3 + 5;
+	var dx = (Math.random() * 5 + 0.5) * (-cha.scaleX) / Math.abs(cha.scaleX);
+	var effect = setInterval(function () {
+		dmgtxt.x += dx;
+		dmgtxt.y -= dy;
+		dmgtxt.alpha -= 0.025;
+		dy -= 0.4;
+	}, 20);
+	setTimeout(function () {
+		clearInterval(effect);
+		dmgtxt.parent.removeChild(dmgtxt);
+	}, 3000);
+}
+function damageEffect(damage, number, xx, yy) {
+	var dmgtxt = new damage;
+	dmgtxt.x = xx;
+	dmgtxt.y = yy;
+	dmgtxt.rotation = Math.random() * 72;
+	var a = dmgtxt.damageText;
+	a.text = "★";
+	a.color = "rgb(" + (Math.random() * 130 + 125) + ", " + (Math.random() * 130 + 125) + ", " + (Math.random() * 130 + 125) + ")";
+	var fontsize = Math.random() * number + 20;
+	fontsize > 100 ? fontsize = 100 : "";
+	a.font = "bold " + fontsize + "px 'Malgun Gothic'"
+	exportRoot.addChild(dmgtxt);
+	var scaleXX = Math.random();
+	scaleXX > 0.5 ? scaleXX = -1 : scaleXX = 1;
+	var dy = Math.random() * 4 + 6;
+	var dx = Math.random() * 4 * scaleXX;
+	var effect = setInterval(function () {
+		dmgtxt.x += dx;
+		dmgtxt.y -= dy;
+		dmgtxt.alpha -= 0.015;
+		dy -= 0.4;
+	}, 20);
+	setTimeout(function () {
+		clearInterval(effect);
+		dmgtxt.parent.removeChild(dmgtxt);
+	}, 3000);
+}
+function hitted(obj) {
+	var plusMinus;
+	cha.scaleX < 0 ? plusMinus = 1 : plusMinus = -1;
+	obj.rotation = plusMinus * 30;
+	obj.alpha = 0.5;
+	var effect = setInterval(function () {
+		obj.rotation -= plusMinus * 2;
+		obj.alpha += 0.034;
+	}, 10);
+	setTimeout(function () {
+		clearInterval(effect);
+		obj.rotation = 0;
+		obj.alpha = 1;
+	}, 150);
+}
+function hpSubstract(obj, damage) {
+	obj.hp -= damage;
+	obj.hpbar.visible = true;
+	obj.hpbar.scaleX = obj.hp / obj.ahp;
+	if (obj.hpbar.scaleX < 0) {
+		obj.hpbar.scaleX = 0;
+		dead(obj);
+		return 0;
+	}
+	obj.hpbarShowTime += 3;
+	hpbarShow(obj);
+}
+function hpbarShow(obj) {
+	var interval = setInterval(function () {
+		obj.hpbarShowTime -= 1;
+	}, 1000);
+	setTimeout(function () {
+		clearInterval(interval);
+		if (obj.hpbarShowTime < 1) {
+			obj.hpbar.visible = false;
+		}
+	}, 3010);
+}
+function dead(obj) {
+	obj.hittable = false;
+	obj.dx=0;
+	var effect = setInterval(function () {
+		obj.y -= .8;
+		obj.alpha -= 0.03
+	}, 10);
+	setTimeout(function () {
+		var idx = mon.findIndex(function (item) {
+			return item.hp < 0;
+		});
+		if (idx > -1) {
+			mon.splice(idx, 1);
+		}
+		obj.parent.removeChild(obj);
+		clearInterval(obj.action);
+		clearInterval(effect);
+	}, 350);
+}
+function moveCCX(number){
+	cha.x+=number;
+	cameraObj.moveBy(-number,0,0);
+}
+function moveCCY(number){
+	cha.y+=number;
+	cameraObj.moveBy(0,-number,0);
+}
+function cameraShake(strength) {
+	strength=strength/40+1.5;
+	var originX = cameraObj.getPosition().x;
+	var originY = cameraObj.getPosition().y;
+	var originZ = cameraObj.getPosition().z;
+	setTimeout(function(){cameraObj.moveBy((Math.random()*2-1)*strength,(Math.random()*2-1)*strength,0)},33);
+	setTimeout(function(){cameraObj.moveBy((Math.random()*2-1)*strength,(Math.random()*2-1)*strength,0)},66);
+	setTimeout(function(){cameraObj.setPosition(originX, originY, originZ)},99);
+}</script>
+<script>
+var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+function init() {
+	canvas = document.getElementById("canvas");
+	anim_container = document.getElementById("animation_container");
+	dom_overlay_container = document.getElementById("dom_overlay_container");
+	var comp=AdobeAn.getComposition("5C20298ACCABDB409B93430F5065B273");
+	var lib=comp.getLibrary();
+	var loader = new createjs.LoadQueue(false);
+	loader.addEventListener("fileload", function(evt){handleFileLoad(evt,comp)});
+	loader.addEventListener("complete", function(evt){handleComplete(evt,comp)});
+	var lib=comp.getLibrary();
+	loader.loadManifest(lib.properties.manifest);
+}
+function handleFileLoad(evt, comp) {
+	var images=comp.getImages();	
+	if (evt && (evt.item.type == "image")) { images[evt.item.id] = evt.result; }	
+}
+function handleComplete(evt,comp) {
+	//This function is always called, irrespective of the content. You can use the variable "stage" after it is created in token create_stage.
+	var lib=comp.getLibrary();
+	var ss=comp.getSpriteSheet();
+	var queue = evt.target;
+	var ssMetadata = lib.ssMetadata;
+	for(i=0; i<ssMetadata.length; i++) {
+		ss[ssMetadata[i].name] = new createjs.SpriteSheet( {"images": [queue.getResult(ssMetadata[i].name)], "frames": ssMetadata[i].frames} )
+	}
+	exportRoot = new lib.html5chiwi();
+	stage = new lib.Stage(canvas);	
+	//Registers the "tick" event listener.
+	fnStartAnimation = function() {
+		stage.addChild(exportRoot);
+		createjs.Ticker.setFPS(lib.properties.fps);
+		createjs.Ticker.addEventListener("tick", stage)
+		stage.addEventListener("tick", handleTick)
+		function handleTick(event) {
+			var cameraInstance = exportRoot.___camera___instance;
+			if(cameraInstance)
+			{
+				var stageCenter = { 'x' : lib.properties.width/2, 'y' : lib.properties.height/2 };
+				if(cameraInstance._off != null && cameraInstance._off == true)
+					exportRoot.transformMatrix = new createjs.Matrix2D();
+				else
+				{
+					if(cameraInstance.pinToObject !== undefined)
+					{
+						cameraInstance.x = cameraInstance.pinToObject.x + cameraInstance.pinToObject.pinOffsetX;
+						cameraInstance.y = cameraInstance.pinToObject.y + cameraInstance.pinToObject.pinOffsetY;
+					}
+					var mat = cameraInstance.getMatrix();
+					mat.tx -= stageCenter.x;
+					mat.ty -= stageCenter.y;
+					var inverseMat = mat.invert();
+					inverseMat.prependTransform(stageCenter.x, stageCenter.y, 1, 1, 0, 0, 0, 0, 0);
+					inverseMat.appendTransform(-stageCenter.x, -stageCenter.y, 1, 1, 0, 0, 0, 0, 0);
+					exportRoot.transformMatrix = inverseMat;
+				}
+			}
+		}
+	}	    
+	//Code to support hidpi screens and responsive scaling.
+	function makeResponsive(isResp, respDim, isScale, scaleType) {		
+		var lastW, lastH, lastS=1;		
+		window.addEventListener('resize', resizeCanvas);		
+		resizeCanvas();		
+		function resizeCanvas() {			
+			var w = lib.properties.width, h = lib.properties.height;			
+			var iw = window.innerWidth, ih=window.innerHeight;			
+			var pRatio = window.devicePixelRatio || 1, xRatio=iw/w, yRatio=ih/h, sRatio=1;			
+			if(isResp) {                
+				if((respDim=='width'&&lastW==iw) || (respDim=='height'&&lastH==ih)) {                    
+					sRatio = lastS;                
+				}				
+				else if(!isScale) {					
+					if(iw<w || ih<h)						
+						sRatio = Math.min(xRatio, yRatio);				
+				}				
+				else if(scaleType==1) {					
+					sRatio = Math.min(xRatio, yRatio);				
+				}				
+				else if(scaleType==2) {					
+					sRatio = Math.max(xRatio, yRatio);				
+				}			
+			}			
+			canvas.width = w*pRatio*sRatio;			
+			canvas.height = h*pRatio*sRatio;
+			canvas.style.width = dom_overlay_container.style.width = anim_container.style.width =  w*sRatio+'px';				
+			canvas.style.height = anim_container.style.height = dom_overlay_container.style.height = h*sRatio+'px';
+			stage.scaleX = pRatio*sRatio;			
+			stage.scaleY = pRatio*sRatio;			
+			lastW = iw; lastH = ih; lastS = sRatio;            
+			stage.tickOnUpdate = false;            
+			stage.update();            
+			stage.tickOnUpdate = true;		
+		}
+	}
+	makeResponsive(false,'both',false,1);	
+	AdobeAn.compositionLoaded(lib.properties.id);
+	fnStartAnimation();
+}
+</script>
+<!-- write your code here -->
+</head>
+<body onload="init();" style="margin:0px;">
+	<div id="animation_container" style="background-color:rgba(0, 0, 0, 1.00); width:1283px; height:720px">
+		<canvas id="canvas" width="1283" height="720" style="position: absolute; display: block; background-color:rgba(0, 0, 0, 1.00);"></canvas>
+		<div id="dom_overlay_container" style="pointer-events:none; overflow:hidden; width:1283px; height:720px; position: absolute; left: 0px; top: 0px; display: block;">
+		</div>
+	</div>
+</body>
+</html>
