@@ -1,15 +1,18 @@
 # Game_ChiwiPlanet
 취미로 개발중인 게임.
-http://buntu.dothome.co.kr/ChiwiPlanet/html5%20chiwi.html
 
 조작법 : 방향키 이동, ASD 공격.
+Arrow Keys for MOVE, ASD Keys for Attack!
 
-현재 몬스터 사냥가능,
-주인공은 죽지않음.
+http://buntu.dothome.co.kr/ChiwiPlanet/html5%20chiwi.html
+
+
+현재 몬스터 사냥가능, 주인공은 죽지않음.
+Currently, Monsters are hunttable, Character don't die.
 
 툴 : Adobe Animate 
 
-언어 : 자바스크립트, CreateJS
+언어 : Javascript, CreateJS
 
 
 
